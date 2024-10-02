@@ -1,3 +1,5 @@
+import datetime
+
 menu = """
 
 [d] Depositar
@@ -9,38 +11,58 @@ menu = """
 
 saldo = 0
 limite = 500
-extrato = ""
-numero_saques = 0
-LIMITE_SAQUES = 3
+extrato = []
+LIMITE_TRANSACOES = 10
+excedeu_limite = False
 
 while True:
     opcao = input(menu)
+    numero_transacoes = 0
+    for transacao in extrato:
+        if transacao["data"].date() == datetime.datetime.now().date():
+            numero_transacoes += 1
+        if numero_transacoes >= LIMITE_TRANSACOES:
+            excedeu_limite = True
     if opcao == "d":
-        valor = abs(float(input("Quanto deseja depositar? ")))
-        saldo += valor
-        extrato += f"Depósito de R$ {valor:.2f}\n"
+        if excedeu_limite == False:
+            valor = abs(float(input("Quanto deseja depositar? ")))
+            saldo += valor
+            extrato.append(
+                {
+                    "info": f"Depósito de R$ {valor:.2f}",
+                    "data": datetime.datetime.now(),
+                }
+            )
+        else:
+            print("Limite de transações diárias atingido!")
     elif opcao == "s":
-        if numero_saques < LIMITE_SAQUES:
+        if excedeu_limite == False:
             valor = abs(float(input("Quanto deseja sacar? ")))
             if saldo >= valor:
                 if valor <= limite:
                     saldo -= valor
-                    extrato += f"Saque de R$ {valor:.2f}\n"
-                    numero_saques += 1
+                    extrato.append(
+                        {
+                            "info": f"Saque de R$ {valor:.2f}",
+                            "data": datetime.datetime.now(),
+                        }
+                    )
                 else:
-                    print("Limite excedido. O valor máximo para saque é de R$ 500,00.")
+                    print(
+                        "Limite excedido. O valor máximo para saque é de R$ 500,00."
+                    )
             else:
                 print("Saldo insuficiente!")
         else:
-            print("Limite de saques diários atingido!")
+            print("Limite de transações diárias atingido!")
     elif opcao == "e":
         print("\n================ EXTRATO ================")
         print(f"Saldo: R$ {saldo:.2f}")
         print("Extrato:")
-        print(extrato)
+        for item in extrato:
+            print(f"{item['data'].strftime('%d/%m/%Y %H:%M:%S')} - {item['info']}")
         print("==========================================")
     elif opcao == "q":
         break
     else:
         print("Opção inválida!")
-    
